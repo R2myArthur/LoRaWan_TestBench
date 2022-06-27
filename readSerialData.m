@@ -1,4 +1,4 @@
 function readSerialData(src,evt)
     data = readline(src);
-    disp(data);
+    disp(['Data recevived: ', data]);
 end
