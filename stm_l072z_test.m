@@ -1,40 +1,36 @@
 %% connect serial
 try
-    clear s;
+    clear s2;
 catch
 end
-s = init_serial('COM5', 9600, "CR");
+s2 = init_serial('COM5', 9600, "CR");
 
 %% initialize Device
-resp = send_cmd(s, 'sys reset');
-disp(['Reset:   ',resp]);
+% Reset board
+send_cmd(s2, 'ATZ');
 
-resp = send_cmd(s, 'mac reset 868');
-disp(['MAC Reset:',resp]);
+% Show help
+send_cmd(s2, 'AT?');
 
-resp = send_cmd(s, 'mac set deveui 0004a30b001b062f');                        % 8-Byte, globally UID (use preprogrammed unique EUI)
-disp(['set deveui: ',resp]);
-resp = send_cmd(s, 'mac set appeui 0000000000000000');  
-disp(['set appeui: ',resp]);
+% Set APP EUI
+send_cmd(s2, 'AT+APPEUI=01:01:01:01:01:01:01:01');
+% Set Dev Eui
+send_cmd(s2, 'AT+DEUI=31:31:35:38:60:37:8F:18');
+% Set Dev Addr
+send_cmd(s2, 'AT+DADDR=20:3A:06:2F');
+% Set APP KEY
+send_cmd(s2, 'AT+APPKEY=2B:7E:15:16:28:AE:D2:A6:AB:F7:15:88:09:CF:4F:3C');
+% Set NwkKey
+send_cmd(s2, 'AT+NWKKEY=2B:7E:15:16:28:AE:D2:A6:AB:F7:15:88:09:CF:4F:3C');
 
-resp = send_cmd(s, 'sys get ver');
-disp(['Version: ',resp]);
-resp = send_cmd(s, 'mac get class');
-disp(['Class: ',resp]);
-resp = send_cmd(s, 'mac get status');
-disp(['Status: ',resp]);
-resp = send_cmd(s, 'mac get deveui');
-disp(['deveui: ',resp]);
-resp = send_cmd(s, 'mac get appeui');
-disp(['appeui: ',resp]);
+%% Join Network
 
-resp = send_cmd(s, 'mac set appkey d6070b81c623f5fd6e6779be634aef86');
-disp(['set appkey: ',resp]);
+% Join the network
+send_cmd(s2, 'AT+JOIN=1');
 
 %% Send Data
-resp = send_cmd(s, 'mac join otaa');
-disp(['join: ',resp]);
-resp = readline(s);
-disp(['join: ',resp]);
+send_cmd(s2, 'AT+SEND=1:0:ABCDEF');
 
+%% Send Data confirmed
+send_cmd(s2, 'AT+SEND=1:1:FEDCBA');
 

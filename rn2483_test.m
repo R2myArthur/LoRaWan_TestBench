@@ -12,7 +12,7 @@ send_cmd(s, 'sys reset');
 send_cmd(s, 'mac reset 868');
 % disp(['MAC Reset:',resp]);
 
-send_cmd(s, 'mac set deveui 0004a30b001b062f');                        % 8-Byte, globally UID (use preprogrammed unique EUI)
+send_cmd(s, 'mac set deveui a2ef0680c6610dfc');                        % 8-Byte, globally UID (use preprogrammed unique EUI)
 % disp(['set deveui: ',resp]);
 send_cmd(s, 'mac set appeui 0000000000000000');  
 % disp(['set appeui: ',resp]);
@@ -31,10 +31,11 @@ send_cmd(s, 'mac get appeui');
 send_cmd(s, 'mac set appkey d6070b81c623f5fd6e6779be634aef86');
 % disp(['set appkey: ',resp]);
 
-%% Send Data
+%% Join chirpstack
 send_cmd(s, 'mac join otaa');
-disp(['join: ',resp]);
-readline(s);
-disp(['join: ',resp]);
 
+
+%% Send Data
+pause(8);
+send_cmd(s, 'mac tx uncnf 4 AAAAAA');
 
