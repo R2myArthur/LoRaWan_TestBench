@@ -1,7 +1,7 @@
 brokerAddress = "tcp://128.131.85.238";
 port = 1883;
 mqClient = mqttclient(brokerAddress, Port = port);
-KeepAliveDuration=minutes(60);
+KeepAliveDuration=minutes(24*60);
 
 mqClient.Connected;
 % write(mqClient, "application/2/device/a2ef0680c6610dfc/rx", "Hello World")
@@ -17,12 +17,12 @@ disp(mqClient.Subscriptions);
 dataTT = read(mqClient);
 disp("Data read: ");
 disp(dataTT);
-% 
+
 % data = peek(mqClient);
 % disp("Data peek: ");
 % disp(data);
 
 %% Base 64
-% res = base64decode('qqqq')
-% res = base64encode(0xaaaaaa)
+% res = matlab.net.base64decode('qqqq')
+% res = matlab.net.base64encode(0xaaaaaa)
 
