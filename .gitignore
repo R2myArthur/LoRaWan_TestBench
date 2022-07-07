@@ -1,2 +1,6 @@
 # List of untracked files to ignore
 **.xml
+ressources/**
+*.txt
+*.asv   
+

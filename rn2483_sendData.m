@@ -10,4 +10,5 @@
 % uplink transmission
 function rn2483_sendData(s, type, portno, data)
     send_cmd(s, ['mac tx ' type ' ' portno ' ' data]);
+    pause(1/2);
 end

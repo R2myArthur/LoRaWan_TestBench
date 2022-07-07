@@ -1,4 +1,4 @@
 function data = readSerialData(src,evt)
-    data = readline(src);
+    data = read(src, src.NumBytesAvailable, 'string');
     disp(['Data recevived: ', data]);
 end
