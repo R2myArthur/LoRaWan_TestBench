@@ -5,7 +5,7 @@
 % Param appKey
 % Param class
 
-function rn2483_config(s, band, devEUI, appEUI, appKey, class)
+function rn2483_config(s, band, devEUI, appEUI, appKey)
     % Reset Device
     send_cmd(s, 'sys reset');
     readSerialData(s);
@@ -19,13 +19,9 @@ function rn2483_config(s, band, devEUI, appEUI, appKey, class)
     readSerialData(s);
     send_cmd(s, ['mac set appkey ' appKey]);
     readSerialData(s);
-    send_cmd(s, ['mac set class ' class]);
-    readSerialData(s);
     
     % Display parameters
     send_cmd(s, 'sys get ver');
-    readSerialData(s);
-    send_cmd(s, 'mac get class');
     readSerialData(s);
     send_cmd(s, 'mac get status');
     readSerialData(s);

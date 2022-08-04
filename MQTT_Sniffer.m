@@ -3,7 +3,6 @@ port = 1883;
 mqClient = mqttclient(brokerAddress, Port = port);
 KeepAliveDuration=minutes(24*60);
 
-mqClient.Connected;
 % write(mqClient, "application/2/device/a2ef0680c6610dfc/rx", "Hello World")
 % subscribe(mqClient, 'gateway/b827ebfffef6d838/command/config');
 % % subscribe(mqClient, 'gateway/b827ebfffef6d838/event/stats');

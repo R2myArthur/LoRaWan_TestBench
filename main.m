@@ -1,4 +1,7 @@
-%%% Main File of Test Bench LoRaWAN
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%% Main File of Test Bench LoRaWAN %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %% Connection MQTT
 try
@@ -7,6 +10,9 @@ catch
 end
 mqtt_client = init_MQTT_Client("tcp://128.131.85.238", 1883);
 KeepAliveDuration=minutes(24*60);
+
+
+%%% RN2483
 
 %% Connection serial port
 try

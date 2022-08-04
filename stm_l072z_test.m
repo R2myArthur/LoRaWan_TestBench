@@ -11,8 +11,8 @@ send_cmd(s2, 'ATZ');
 readSerialData(s2);
 
 % Show help
-send_cmd(s2, 'AT?');
-readSerialData(s2);
+% send_cmd(s2, 'AT?');
+% readSerialData(s2);
 
 % Set APP EUI
 send_cmd(s2, 'AT+APPEUI=01:01:01:01:01:01:01:01');

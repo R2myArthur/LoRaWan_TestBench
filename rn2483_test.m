@@ -28,7 +28,3 @@ send_cmd(s, 'mac join otaa');
 pause(8);
 send_cmd(s, 'mac tx uncnf 4 AAAAAA');
 
-
-%% test
-eui = 'a2ef0680c6610dfc';
-send_cmd(s, ['mac set deveui ' eui]); 
