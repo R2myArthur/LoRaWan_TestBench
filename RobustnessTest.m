@@ -63,191 +63,117 @@ disp("Change Equipment Class in C");
 send_cmd(s_stm, 'AT+CLASS=C');
 
 
-%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%
-%% Send Data
-% while (1)
-%     send_cmd(s_stm, 'AT+SEND=1:0:ABCDEF');
-% end
-
-% %% Send down data
-% % Create down message on MQTT broker
-% deveui = '3131353860378f18';
-% % pattern = 'q83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83vq83v';
-% % pattern = 'q83v';
-% % pattern = matlab.net.base64encode(0xaaaaa);
-% pattern = 'qqqq';
-% 
-% % for  i = 0:1:100
-% i=0;
-% while (1)
-%     clear data;
-%     clear dt;
-%     disp(['Boucle n' int2str(i)]);
-%     i = i +1;
-%     write_MQTT_message(mqtt_client, ['application/2/device/' deveui '/tx'], ['{"confirmed":false,"fPort":1,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":2,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":3,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":4,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":5,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":6,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":7,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":8,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":9,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":10,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":11,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":12,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":13,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":14,"data":"' pattern '"}']);
-% %     write_MQTT_message(mqtt_client, 'application/2/device/3131353860378f18/tx', ['{"confirmed":false,"fPort":15,"data":"' pattern '"}']);
-%      
-%     % Get Packet from MQTT Broker and verify Data on MQTT Broker
-%     data = read_MQTT_subscribe(mqtt_client, ['application/2/device/' deveui '/tx']);
-%     
-%     if ( count(data.Data, pattern) )
-%         disp('Server received the MQTT instruction');
-%         send_cmd(s_stm, 'AT+SEND=1:0:ABCDEF');
-%         pause(1);
-% 
-%         dt = read(s_stm,s_stm.NumBytesAvailable,'string');
-%         disp(dt);
-%         writeDataInFile('test.txt', dt);
-% %         if ( count(dt, 'aaaaaa') )
-% %             disp('A download message is received');
-% %         else
-% %             disp("NO DOWLOAD message");
-% %             disp(dt);
-% %         end
-%     else
-%         disp("Server didn't received MQTT instructions");
-%         disp(data);
-%     end
-%     pause(1/2);
-% end
 
 %%
+%%%%%%%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%% ROBUSTNESS %%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Configure the limit of robustness test
-MAX_UP_FRAME = 10;          % Number of frame UP to send per loop
-MAX_SIZE_FRAME_UP = 242;    % Number of Bytes (242 bytes max)
+MAX_SIZE_FRAME_UP = 40;     % Number of Bytes (242 bytes max)
+MAX_SIZE_FRAME_DOWN = 51;   % Size of data to send DOWN (51 bytes max)
+MAX_FPORT = 223;            % Number of LoRa port to use [1..223]
+DEVEUI = '3131353860378f18';% End device identifier
 % End of configuration
-MAX_FPORT = 223;            % [1..223]
 
-disp(strcat("MAX_UP_FRAME: ", string(MAX_UP_FRAME)));
-disp(strcat("MAX_SIZE_FRAME_UP: ", string(MAX_SIZE_FRAME_UP)));
-disp(strcat("MAX_FPORT: ", string(MAX_FPORT)));
-
-s_stm.UserData = "";
+writeToScreenAndFile(strcat("MAX_SIZE_FRAME_UP: ", string(MAX_SIZE_FRAME_UP)));
+writeToScreenAndFile(strcat("MAX_SIZE_FRAME_DOWN: ", string(MAX_SIZE_FRAME_DOWN)));
+writeToScreenAndFile(strcat("DEVEUI: ", DEVEUI));
+writeToScreenAndFile(strcat("MAX_FPORT: ", string(MAX_FPORT)));
 
 while (1)
+    % Init loop
+    flush(mqtt_client);
+    s_stm.flush();
+
+    writeToScreenAndFile("**************************************");
+    writeToScreenAndFile("**************************************");
     % Choose random UP or DOWN Data
     if ( randi(2) == 1 )
+%     if ( 0 )          % Debug
+%     if ( 1 )          % Debug
         % Send Data UP
-        disp("Send data UP");
-        % Number of UP frame to send
-        number_of_frame_up = randi(MAX_UP_FRAME);
-        disp(strcat(string(number_of_frame_up), " frames will be send"));
-        % Loop the number of frame to send
-        for i = 1:number_of_frame_up % SKIP ONLY 1
-            disp(['Loop num ' int2str(i)]);
+        writeToScreenAndFile("Send data UP");
+        % Size of data in frame to UP
+        size_of_data = randi(MAX_SIZE_FRAME_UP);
+        % Generate random data in hex string (d
+        payload_to_up = strjoin(string(dec2hex(randi([0 255], 1, size_of_data))), '');
+        
+        % Random choice fport [1..223]
+        fport = randi(MAX_FPORT);
+        % Only use Unconfirmed message (0)
+        confirmation = '0';
 
-            % Size of data in frame to UP
-            size_of_frame_up = randi(MAX_SIZE_FRAME_UP);
-            % Generate random data in hex string (d
-            payload_to_up = strjoin(string(dec2hex(randi([0 255], 1, size_of_frame_up))), '');
-            
-            % Random choice fport [1..223]
-            fport = int2str(randi(MAX_FPORT));
-            % Random choice of message type 'Confirmed' (1) or 'Unconfirmed' (0)
-%             confirmation = int2str(randi(2) - 1);
-            confirmation = '0';
-
-            % Send command to the device (AT+SEND=<port>:<ack>:<payload>)
-            disp(strcat('Frame to send UP: fport=', fport, ' ; Confirmed=', confirmation, ' ; Payload=', payload_to_up));
-
-            send_cmd(s_stm, strcat('AT+SEND=', fport, ':', confirmation, ':', payload_to_up));
-            
-            % Wait response OK/ERROR
-            is_all_data_received = false;
-            is_OK_received = false;
-            is_SEND_CONFIRMED_received = false;
-            % #TODO Add timeout
-            while (isempty(s_stm.UserData)), end
-
-            % Look for answer
-            if confirmation == '0'
-                while ( is_OK_received == false )
-                    pause(1/50);
-                    if ( ~isempty(s_stm.UserData) )
-                        if ( contains(s_stm.UserData(1), "OK") )
-                            disp('Device send data to the LoRa Network OK');
-                            is_OK_received = true;
-                        elseif ( contains(s_stm.UserData(1), "AT_") )
-                            disp(strcat('Device Error message: ', s_stm.UserData(1)));
-                            break;
-                        end
-                        % Delete Data already read
-                        s_stm.UserData(1) = [];
-                    end
+        % Send command to the device (AT+SEND=<port>:<ack>:<payload>)
+        writeToScreenAndFile(strcat('Frame to send UP: fport=', int2str(fport), ' ; Payload=', payload_to_up));
+        send_cmd(s_stm, strcat('AT+SEND=', int2str(fport), ':', confirmation, ':', payload_to_up));
+        
+        % Wait response OK/ERROR
+        data_received = readline(s_stm);
+        while( ~contains(data_received, "OK") && ~contains(data_received, "AT_")  )
+            data_received = readline(s_stm);
+            writeToScreenAndFile(sprintf("Serial confirmation received: %s", data_received));
+        end
+        
+        try
+            % Read MQTT data
+            MQTT_data = read_MQTT_subscribe(mqtt_client, ['application/2/device/' DEVEUI '/rx']);
+            % Data processing only if something is received
+            if ( ~isempty(MQTT_data) )
+                % Decode received data in a JSON format
+                MQTT_data_json = jsondecode(MQTT_data.Data);
+                % Verify fport, deveui and data are what we sent
+                if ( MQTT_data_json.fPort == fport && MQTT_data_json.devEUI == string(DEVEUI) )
+                    writeToScreenAndFile(sprintf("MQTT Data received: %s", MQTT_data_json.data));
+                    writeToScreenAndFile("Transmission OK");
+                else
+                    writeToScreenAndFile("ERROR Transmission MQTT");
                 end
-            elseif confirmation == '1'
-                while (is_OK_received == false || is_SEND_CONFIRMED_received == false )
-                    pause(1/50);
-                    if ( ~isempty(s_stm.UserData) )
-                        if ( contains(s_stm.UserData(1), "OK") )
-                            disp('Device send data to the LoRa Network OK');
-                            is_OK_received = true;
-                        elseif ( contains(s_stm.UserData(1), "EVT:SEND_CONFIRMED") )
-                            disp('Send Data is confirmed');
-                            is_SEND_CONFIRMED_received = true;
-                        elseif ( contains(s_stm.UserData(1), "AT_") )
-                            disp(strcat('Device Error message: ', s_stm.UserData(1)));
-                            break;
-                        end
-                        % Delete Data already read
-                        s_stm.UserData(1) = [];
-                    end
-                end
+            else
+                writeToScreenAndFile("ERROR Transmission Serial");
             end
-
-%             while (is_all_data_received == false)
-%                 if ( contains(s_stm.UserData(1), "OK") )
-%                     disp('Device send data to the LoRa Network OK');
-%                     is_OK_received = true;
-%                 elseif ( contains(s_stm.UserData(1), "EVT:SEND_CONFIRMED") )
-%                     disp('Send Data is confirmed');
-%                     is_SEND_CONFIRMED_received = true;
-%                 elseif ( contains(s_stm.UserData(1), "AT_") )
-%                     disp(strcat('Device Error: ', s_stm.UserData(1)));
-%                     is_OK_received = false;
-%                     is_SEND_CONFIRMED_received = false;
-%                 end
-% 
-%                 % Delete Data already read
-%                 s_stm.UserData(1) = [];
-% 
-%                 % Get out if no more data
-%                 if ( isempty(s_stm.UserData) )
-%                     is_all_data_received = true;
-%                     if ( confirmation == '1' )
-%                         if ( is_OK_received == true && is_SEND_CONFIRMED_received == true )
-%                             disp('Send Data and confirmation received OK');
-%                         else
-%                             disp('ERROR Send Data and confirmation ');
-%                         end
-%                     else
-%                         if ( is_OK_received == true )
-%                             disp('Send Data OK');
-%                         else
-%                             disp('ERROR Send Data');
-%                         end
-%                     end
-%                 end
-%             end
+        catch e % e is an MException struct
+            writeToScreenAndFile(sprintf('The identifier was: %s',e.identifier));
+            writeToScreenAndFile(sprintf('There was an error! The message was: %s',e.message));
         end
     else
-        disp("Send data DOWN");
+        writeToScreenAndFile("Send data DOWN");
+        % Size of data in frame to DOWN
+        size_of_data = randi(MAX_SIZE_FRAME_DOWN);
+        % Generate random data in hex string
+        random_data = randi([0x0 0xFF], 1, size_of_data, 'uint8');
+        payload_to_up = matlab.net.base64encode(random_data);
+%         payload_to_up = matlab.net.base64encode(0xaaaaaaaaaaaaaaaa);          % Debug
+        
+        % Random choice fport [1..223]
+        fport = randi(MAX_FPORT);
+        
+        % Send MQTT message for DOWN Frame
+        writeToScreenAndFile(sprintf('MQTT Topic: "application/2/device/%s/tx"', DEVEUI));
+        writeToScreenAndFile(sprintf('MQTT Message: {"confirmed":false,"fPort":%d,"data":"%s"}', fport, payload_to_up));
+        write_MQTT_message(mqtt_client, ['application/2/device/' DEVEUI '/tx'], ['{"confirmed":false,"fPort":' int2str(fport) ',"data":"' payload_to_up '"}']);
+        try
+            % Verify message is received by the STM device with the right data
+            data_received_down = "";
+            check_data = lower(strjoin(string(dec2hex(random_data)), ''));
+            size_of_check_data = string(dec2hex(strlength(check_data) / 2, 2));
+            while( ~contains(data_received_down, strcat("EVT:", int2str(fport), ":", size_of_check_data, ":", check_data )) )
+                data_received_down = readline(s_stm);
+                writeToScreenAndFile(sprintf("Serial data Received: %s", data_received_down));
+            end            
+        catch e %e is an MException struct
+            writeToScreenAndFile(sprintf('The identifier was: %s', e.identifier));
+            writeToScreenAndFile(sprintf('There was an error! The message was: %s', e.message));
+        end
+        
+        % Verify if data is received
+        if ( ~isempty(data_received_down) )
+%             writeToScreenAndFile(data_received_down);
+%             data_received_down = readline(s_stm);
+            writeToScreenAndFile("DOWN: Transmission OK");
+        else
+            writeToScreenAndFile("DOWN ERROR Transmission");
+        end
     end
-
 end
