@@ -3,29 +3,45 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%% PRECONDITIONS %%%%%%%%%%%%%%%
-
 %% Connection MQTT
 try
     clear mqtt_client;
 catch
 end
 mqtt_client = init_MQTT_Client("tcp://128.131.85.183", 1883);
-KeepAliveDuration=minutes(24*60);
 
 %% Connection serial port
 try
     clear s_stm;
 catch
 end
-s_stm = init_serial('COM5', 9600, "CR");
+s_stm = init_serial('COM5', 9600, "CR/LF");
 
-%% Show help
-send_cmd(s_stm, 'AT?');
-readSerialData(s_stm);
+%% Reset board and Show help
 
-%% Reset board
+% Reset STM Board
 send_cmd(s_stm, 'ATZ');
-% readSerialData(s_stm);
+data_to_read = false;
+while( data_to_read == false  )
+    data_received = readline(s_stm);
+    if ( isempty(data_received) )
+        data_to_read = true;
+    else
+        writeToScreenAndFile(data_received);
+    end
+end
+
+% Show help
+send_cmd(s_stm, 'AT?');
+data_to_read = false;
+while( data_to_read == false )
+    data_received = readline(s_stm);
+    if ( isempty(data_received) )
+        data_to_read = true;
+    else
+        writeToScreenAndFile(data_received);
+    end
+end
 
 %% Configure board
 stm_config(s_stm, '31:31:35:38:60:37:8F:18', '01:01:01:01:01:01:01:01', '2B:7E:15:16:28:AE:D2:A6:AB:F7:15:88:09:CF:4F:3C');
@@ -62,7 +78,40 @@ end
 disp("Change Equipment Class in C");
 send_cmd(s_stm, 'AT+CLASS=C');
 
-
+%% UP test for Debug
+% flush(s_stm);
+% 
+% % fport = 66;
+% % confirmation =0
+% % payload_to_up = "F261B19AC69760D939CCFF48B5AA6A7FF2F4BB620A95905AE19F9F4B13"
+% 
+% while 1
+%     send_cmd(s_stm, strcat('AT+SEND=', int2str(fport), ':', confirmation, ':', payload_to_up));
+% 
+%     c = 0;
+%     while c < 11
+%         rsp = readline(s_stm);
+%         fprintf('%s\n', rsp);
+%         if isequal(rsp, 'AT_BUSY_ERROR')
+%             flush(s_stm);
+%             break;
+%         end
+% %         if isempty(rsp)
+% %             pause(2);
+% %             flush(s_stm);
+% %         end
+%         if ~isempty(rsp) && rsp(1)=='+'
+%         else
+%             c = c + 1;
+%         end
+%     end
+% 
+%     if s_stm.NumBytesAvailable
+%         error('buffer not empty');
+%     end
+% 
+% %     pause(4);
+% end
 
 %%
 %%%%%%%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%%%%%
@@ -91,13 +140,13 @@ while (1)
     writeToScreenAndFile("**************************************");
     % Choose random UP or DOWN Data
     if ( randi(2) == 1 )
-%     if ( 0 )          % Debug
 %     if ( 1 )          % Debug
+%     if ( 0 )          % Debug
         % Send Data UP
         writeToScreenAndFile("Send data UP");
         % Size of data in frame to UP
         size_of_data = randi(MAX_SIZE_FRAME_UP);
-        % Generate random data in hex string (d
+        % Generate random data in hex string
         payload_to_up = strjoin(string(dec2hex(randi([0 255], 1, size_of_data))), '');
         
         % Random choice fport [1..223]
@@ -114,6 +163,16 @@ while (1)
         while( ~contains(data_received, "OK") && ~contains(data_received, "AT_")  )
             data_received = readline(s_stm);
             writeToScreenAndFile(sprintf("Serial confirmation received: %s", data_received));
+        end
+
+        is_end = false;
+        while( is_end == false )
+            data_received = readline(s_stm);
+            if ( isempty(data_received) )
+                is_end = true;
+            else
+                writeToScreenAndFile(sprintf("Serial confirmation received: %s", data_received));
+            end
         end
         
         try
@@ -165,6 +224,13 @@ while (1)
         catch e %e is an MException struct
             writeToScreenAndFile(sprintf('The identifier was: %s', e.identifier));
             writeToScreenAndFile(sprintf('There was an error! The message was: %s', e.message));
+            pause(20);
+            if ( s_stm.NumBytesAvailable > 1 )
+                data_received_down = read(s_stm,s_stm.NumBytesAvailable,'string');
+                writeToScreenAndFile(sprintf('Data received after TimeOut: %s', data_received_down));
+            else
+                writeToScreenAndFile('NO data received after timeout');
+            end
         end
         
         % Verify if data is received
