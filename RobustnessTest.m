@@ -78,46 +78,13 @@ end
 disp("Change Equipment Class in C");
 send_cmd(s_stm, 'AT+CLASS=C');
 
-%% UP test for Debug
-% flush(s_stm);
-% 
-% % fport = 66;
-% % confirmation =0
-% % payload_to_up = "F261B19AC69760D939CCFF48B5AA6A7FF2F4BB620A95905AE19F9F4B13"
-% 
-% while 1
-%     send_cmd(s_stm, strcat('AT+SEND=', int2str(fport), ':', confirmation, ':', payload_to_up));
-% 
-%     c = 0;
-%     while c < 11
-%         rsp = readline(s_stm);
-%         fprintf('%s\n', rsp);
-%         if isequal(rsp, 'AT_BUSY_ERROR')
-%             flush(s_stm);
-%             break;
-%         end
-% %         if isempty(rsp)
-% %             pause(2);
-% %             flush(s_stm);
-% %         end
-%         if ~isempty(rsp) && rsp(1)=='+'
-%         else
-%             c = c + 1;
-%         end
-%     end
-% 
-%     if s_stm.NumBytesAvailable
-%         error('buffer not empty');
-%     end
-% 
-% %     pause(4);
-% end
 
 %%
-%%%%%%%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%% ROBUSTNESS %%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEST %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Send random frame DOWN or UP and verify data on serial and on MQTT     %
+% server                                                                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Configure the limit of robustness test
 MAX_SIZE_FRAME_UP = 40;     % Number of Bytes (242 bytes max)
@@ -139,10 +106,10 @@ while (1)
     writeToScreenAndFile("**************************************");
     writeToScreenAndFile("**************************************");
     % Choose random UP or DOWN Data
-    if ( randi(2) == 1 )
+%     if ( randi(2) == 1 )
 %     if ( 1 )          % Debug
-%     if ( 0 )          % Debug
-        % Send Data UP
+    if ( 0 )          % Debug
+        % Send UPLINK Frame
         writeToScreenAndFile("Send data UP");
         % Size of data in frame to UP
         size_of_data = randi(MAX_SIZE_FRAME_UP);
@@ -197,21 +164,23 @@ while (1)
             writeToScreenAndFile(sprintf('There was an error! The message was: %s',e.message));
         end
     else
+        % Send DOWNLINK Frame
         writeToScreenAndFile("Send data DOWN");
+
         % Size of data in frame to DOWN
         size_of_data = randi(MAX_SIZE_FRAME_DOWN);
         % Generate random data in hex string
         random_data = randi([0x0 0xFF], 1, size_of_data, 'uint8');
-        payload_to_up = matlab.net.base64encode(random_data);
-%         payload_to_up = matlab.net.base64encode(0xaaaaaaaaaaaaaaaa);          % Debug
+        payload_to_down = matlab.net.base64encode(random_data);
+%         payload_to_up = matlab.net.base64encode(0xaaaaaaaaaaaaaaaa);   % Debug
         
         % Random choice fport [1..223]
         fport = randi(MAX_FPORT);
         
         % Send MQTT message for DOWN Frame
         writeToScreenAndFile(sprintf('MQTT Topic: "application/2/device/%s/tx"', DEVEUI));
-        writeToScreenAndFile(sprintf('MQTT Message: {"confirmed":false,"fPort":%d,"data":"%s"}', fport, payload_to_up));
-        write_MQTT_message(mqtt_client, ['application/2/device/' DEVEUI '/tx'], ['{"confirmed":false,"fPort":' int2str(fport) ',"data":"' payload_to_up '"}']);
+        writeToScreenAndFile(sprintf('MQTT Message: {"confirmed":false,"fPort":%d,"data":"%s"}', fport, payload_to_down));
+        write_MQTT_message(mqtt_client, ['application/2/device/' DEVEUI '/tx'], ['{"confirmed":false,"fPort":' int2str(fport) ',"data":"' payload_to_down '"}']);
         try
             % Verify message is received by the STM device with the right data
             data_received_down = "";
