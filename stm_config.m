@@ -24,7 +24,7 @@ function stm_config(s_stm, devEUI, appEUI, appKey)
     data_received = readline(s_stm);
     writeToScreenAndFile(sprintf("APPKEY: %s", data_received));
     % Set Duty cycle OFF
-    send_cmd(s_stm, 'AT+DCS=0');
+    send_cmd(s_stm, 'AT+DCS=0'); % 0= deactivate; 1= activate
 %     data_received = readline(s_stm);
 %     data_received = readline(s_stm);
 %     data_received = readline(s_stm);
