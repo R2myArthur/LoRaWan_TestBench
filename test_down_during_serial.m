@@ -6,7 +6,7 @@ payload_to_down = 'dQ==';
 while (1)
     write_MQTT_message(mqtt_client, ['application/2/device/' DEVEUI '/tx'], ['{"confirmed":false,"fPort":' int2str(fport) ',"data":"' payload_to_down '"}']);
     
-%     send_cmd(s_stm, 'AT?');
+    send_cmd(s_stm, 'AT?');
     
     while (1)
         rsp = readline(s_stm);
@@ -16,5 +16,5 @@ while (1)
             break;
         end
     end
-    pause(2);
+    pause(3);
 end

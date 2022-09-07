@@ -1,3 +1,12 @@
+%% Connects to the serial port specified by port and configure it
+% Param
+%   port : string : Serial : port for connection (ex: "COM1")
+%   speed         : int    : Communication speed in bits per second (baudrate) (ex: 9600)
+%   terminator    : string : Terminator character for reading and writing
+%   ASCII-terminated data (ex: "CR/LF")
+%
+% Return an object Serialport
+
 function serial = init_serial(port, speed, terminator)
     disp(['Connection of device ' port]);
 
